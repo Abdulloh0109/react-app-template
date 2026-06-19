@@ -8,6 +8,11 @@ layer** so it runs end-to-end with zero backend.
 Use it to start a new project from a stable, opinionated skeleton instead of
 from scratch — then replace the example feature (`users`) with your own.
 
+> 📘 **Building tomorrow?** [`docs/ADD_A_FEATURE.md`](docs/ADD_A_FEATURE.md) is a
+> step-by-step, copy-paste cookbook for adding a new resource across every
+> layer (types → constants → service → mock → organism → page → route), plus
+> how to add UI components and switch to a real backend.
+
 ## Quick start
 
 ```bash
