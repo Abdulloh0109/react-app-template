@@ -74,3 +74,12 @@ export const db = {
 let idCounter = db.users.length
 
 export const nextId = () => String(++idCounter)
+
+/**
+ * Restores the seed data. Tests call this between cases so mutations from one
+ * do not leak into the next — the same reason a real suite truncates tables.
+ */
+export const resetDb = () => {
+  db.users = seedUsers()
+  idCounter = db.users.length
+}

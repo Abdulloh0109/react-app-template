@@ -85,13 +85,19 @@ export const ROUTES = {
 
 ## 3. Service — `src/services/products/queries.ts`
 
-Copy `src/services/users/queries.ts` and replace `User`→`Product`,
-`users`→`products`, `USERS`→`PRODUCTS`. The shape stays identical: one
-`useProducts()` hook returning the list plus `create/update/delete` and a
-`useGetProductById` factory. **You don't touch this file again when you wire a
-real backend** — it already uses the real `useGet`/`useCreate`/… hooks.
+Copy `src/services/users/queries.ts` and replace `Product`→your resource. The
+shape: a `productsKeys` object that owns every cache key, one hook per
+operation, and each mutation invalidating through that object. **You don't
+touch this file again when you wire a real backend** — it already uses the real
+`useGet`/`useCreate`/… hooks.
+
+> **Why one hook per operation?** A component that only deletes should not
+> subscribe to the list query. Splitting reads from writes keeps each consumer
+> paying for exactly what it uses.
 
 ```ts
+import { useQueryClient } from '@tanstack/react-query'
+import { useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import type {
   DeleteProductResponse,
@@ -100,68 +106,90 @@ import type {
 } from './types'
 import { QUERY_KEYS, URLS } from '@/constants'
 import {
-  useCreate, useDelete, useGet, useGetOne, useUpdatePut,
-  type EnabledQuery, type ResponseDataWithPagination,
+  useCreate,
+  useDelete,
+  useGet,
+  useGetOne,
+  useUpdatePut,
+  type EnabledQuery,
+  type ResponseDataWithPagination,
 } from '@/lib/api'
-import { client } from '@/providers'
 import type { Callbacks } from '@/types'
 
-export const useProducts = (options?: EnabledQuery) => {
+export const productsKeys = {
+  all: [QUERY_KEYS.PRODUCTS] as const,
+  list: (search: string) => [QUERY_KEYS.PRODUCTS, search] as const,
+  detail: (id: string) => [QUERY_KEYS.PRODUCT, id] as const,
+}
+
+const useInvalidateProducts = () => {
+  const queryClient = useQueryClient()
+  return useCallback(
+    () => queryClient.invalidateQueries({ queryKey: productsKeys.all }),
+    [queryClient]
+  )
+}
+
+export const useProductsQuery = (options?: EnabledQuery) => {
   const { search } = useLocation()
 
-  const { data: products, isLoading: isLoadingProducts } = useGet<
-    ResponseDataWithPagination<ProductResponseDto>
-  >([QUERY_KEYS.PRODUCTS, search], URLS.products.get, {
-    enabledLoad: options?.enabledLoad ?? true,
-  })
+  const {
+    data: products,
+    isLoading: isLoadingProducts,
+    isError: isProductsError,
+    refetch: refetchProducts,
+  } = useGet<ResponseDataWithPagination<ProductResponseDto>>(
+    productsKeys.list(search),
+    URLS.products.get,
+    { enabledLoad: options?.enabledLoad ?? true }
+  )
 
-  const useGetProductById = (id: string, enabled?: boolean) => {
-    const { data: product, isLoading: isLoadingProduct } =
-      useGetOne<ProductResponseDto>(
-        [QUERY_KEYS.PRODUCT, id], URLS.products.getById(id), enabled
-      )
-    return { product, isLoadingProduct }
-  }
+  return { products, isLoadingProducts, isProductsError, refetchProducts }
+}
 
-  const invalidate = () =>
-    client.invalidateQueries({ queryKey: [QUERY_KEYS.PRODUCTS] })
+export const useProductQuery = (id: string, enabled?: boolean) => {
+  const {
+    data: product,
+    isLoading: isLoadingProduct,
+    isError: isProductError,
+  } = useGetOne<ProductResponseDto>(
+    productsKeys.detail(id),
+    URLS.products.getById(id),
+    enabled
+  )
+  return { product, isLoadingProduct, isProductError }
+}
 
-  const { mutate: createMutate, isPending: isCreating } =
-    useCreate<ProductRequestDto, ProductResponseDto>(URLS.products.create)
+export const useCreateProduct = () => {
+  const invalidate = useInvalidateProducts()
+  const { mutate, isPending: isCreating } = useCreate<
+    ProductRequestDto,
+    ProductResponseDto
+  >(URLS.products.create)
 
-  const createProduct = (data: ProductRequestDto, cb?: Callbacks<ProductResponseDto>) =>
-    createMutate(data, {
-      onSuccess: (res) => { invalidate(); cb?.onSuccess?.(res) },
-      onError: (e) => cb?.onError?.(e),
-    })
-
-  const { mutate: updateMutate, isPending: isUpdating } =
-    useUpdatePut<ProductRequestDto, ProductResponseDto>()
-
-  const updateProduct = (id: string, data: ProductRequestDto, cb?: Callbacks<ProductResponseDto>) =>
-    updateMutate({ url: URLS.products.update(id), item: data }, {
+  const createProduct = (
+    data: ProductRequestDto,
+    callbacks?: Callbacks<ProductResponseDto>
+  ) =>
+    mutate(data, {
       onSuccess: (res) => {
         invalidate()
-        client.invalidateQueries({ queryKey: [QUERY_KEYS.PRODUCT, id] })
-        cb?.onSuccess?.(res)
+        callbacks?.onSuccess?.(res)
       },
-      onError: (e) => cb?.onError?.(e),
+      onError: (e) => callbacks?.onError?.(e),
     })
 
-  const { mutate: deleteMutate } = useDelete<DeleteProductResponse>()
-
-  const deleteProduct = (id: string, cb?: Callbacks<DeleteProductResponse>) =>
-    deleteMutate(URLS.products.delete(id), {
-      onSuccess: (res) => { invalidate(); cb?.onSuccess?.(res) },
-      onError: (e) => cb?.onError?.(e),
-    })
-
-  return {
-    products, isLoadingProducts, useGetProductById,
-    createProduct, updateProduct, deleteProduct, isCreating, isUpdating,
-  }
+  return { createProduct, isCreating }
 }
+
+// useUpdateProduct / useDeleteProduct follow the same pattern —
+// copy them from src/services/users/queries.ts.
 ```
+
+**Always surface `isError` and `refetch` from a list hook.** The `Table`
+molecule takes `isError` / `onRetry` and renders a distinct error state; a
+component that ignores them shows "no results" when the request actually
+failed, which is the single most common lie in a CRUD UI.
 
 **`src/services/products/index.ts`:**
 
@@ -184,8 +212,20 @@ fake-data step — it disappears when you switch to a real backend.
 export const db = {
   users: seedUsers(),
   products: [
-    { id: '1', name: 'Starter plan', price: 19, status: 'published', created_at: '2024-01-01' },
-    { id: '2', name: 'Pro plan',     price: 49, status: 'draft',     created_at: '2024-01-02' },
+    {
+      id: '1',
+      name: 'Starter plan',
+      price: 19,
+      status: 'published',
+      created_at: '2024-01-01',
+    },
+    {
+      id: '2',
+      name: 'Pro plan',
+      price: 49,
+      status: 'draft',
+      created_at: '2024-01-02',
+    },
   ],
 }
 ```
@@ -243,8 +283,8 @@ export * from './ProductModal'
 export * from './ProductTable'
 ```
 
-Inside the table/modal, the only edits are: the service hook (`useProducts`),
-the columns, and the form fields.
+Inside the table/modal, the only edits are: the service hooks
+(`useProductsQuery`, `useDeleteProduct`, …), the columns, and the form fields.
 
 ## 6. Page — `src/pages/products.tsx`
 
@@ -261,12 +301,22 @@ export const ProductsPage = () => {
   const [openAdd, setOpenAdd] = useState(false)
   return (
     <PagesLayout
-      title={<h1 className="text-2xl font-bold text-dark-20">Products</h1>}
-      actions={<Button icon={PlusIcon} onClick={() => setOpenAdd(true)}>Add product</Button>}
+      title={<h1 className="text-2xl font-bold text-content">Products</h1>}
+      actions={
+        <Button icon={PlusIcon} onClick={() => setOpenAdd(true)}>
+          Add product
+        </Button>
+      }
       content={<ProductTable />}
-      modal={openAdd && (
-        <ProductModal mode="add" open={openAdd} onClose={() => setOpenAdd(false)} />
-      )}
+      modal={
+        openAdd && (
+          <ProductModal
+            mode="add"
+            open={openAdd}
+            onClose={() => setOpenAdd(false)}
+          />
+        )
+      }
     />
   )
 }
@@ -297,9 +347,12 @@ const ProductsPage = lazy(() =>
 ## 8. Verify
 
 ```bash
-npm run typecheck     # catches missing exports / type drift
+npm run validate      # lint + format + typecheck + tests, the same gate as CI
 npm run dev           # click through: list, search, paginate, add, edit, delete
 ```
+
+Check both themes with the toggle in the header — semantic tokens make that
+free, but a hardcoded color will show up immediately.
 
 That's the whole loop. The `users` feature is your reference implementation for
 every one of these steps.
@@ -315,9 +368,76 @@ every one of these steps.
 - **Molecule** (composes atoms): same folder shape under
   `src/ui/molecules/`, register in `src/ui/molecules/index.ts`. Import atoms
   from `@/ui/atoms`.
-- Use design tokens, not raw hex: classes like `bg-primary-10`, `text-dark-30`,
-  `fill-danger-10` come from `src/tokens/colors.ts` via `tailwind.config.ts`.
-  Change brand colors there once and everything follows.
+
+### Colors: semantic first
+
+The kit follows **Ant Design v5**: 32px controls (`h-control`), 6px radii
+(`rounded`), `shadow-card` / `shadow-modal` elevation and AntD's palettes.
+
+There are two color layers, and picking the right one is what makes a component
+work in dark mode without a single `dark:` class.
+
+`accent` is a _fill_ that carries white text; `accent-text` is the accent used
+_as_ text or an icon. They differ in dark mode — use the right one.
+
+| Use                                     | When                                                                                | Examples                                                                                                                               |
+| --------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Semantic** (`src/tokens/semantic.ts`) | anything structural — backgrounds, text, borders, status chips, destructive actions | `bg-surface`, `bg-canvas`, `text-content`, `text-content-muted`, `border-line`, `bg-tone-danger`, `text-accent-text`, `bg-destructive` |
+| **Brand ramp** (`src/tokens/colors.ts`) | a hue that must stay itself in both themes                                          | `bg-primary-10`, `bg-info-30`                                                                                                          |
+
+Never a raw hex. `src/tokens/semantic.test.ts` asserts WCAG AA contrast for every
+foreground/background pair, so adding a token means adding it to that list too.
+It also fails if a semantic token is named after a ramp — `theme.colors` spreads
+the ramps first, so a semantic `danger` would silently wipe out `danger-10..50`
+(this is why the destructive token is called `destructive`).
+
+### Layer rules are enforced
+
+`eslint.config.mjs` declares which layers each folder may import. A UI component
+that reaches into `@/services`, or a page imported from an organism, fails
+`npm run lint` — you do not have to remember the diagram.
+
+## Testing a new feature
+
+Vitest + Testing Library are wired up; `src/test/utils.tsx` provides the
+providers every component assumes.
+
+Pick the cheapest level that can catch the bug:
+
+| Level                 | Use for                                      | Example in this repo                                       |
+| --------------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| Pure function         | formatting, pagination maths, palette rules  | `src/utils/twMerge.test.ts`, `src/tokens/semantic.test.ts` |
+| Component             | states, keyboard behaviour, accessible names | `src/ui/molecules/Modal/Modal.test.tsx`                    |
+| Handler               | the mock API contract itself                 | `src/mocks/handlers.test.ts`                               |
+| Service (integration) | URL, query key and response shape lining up  | `src/services/users/queries.test.tsx`                      |
+
+Service tests run against the **real** axios instance with the mock adapter
+attached, so they exercise the same path the app does:
+
+```tsx
+import { renderHook, waitFor } from '@testing-library/react'
+import { createHookWrapper } from '@/test/utils'
+import { resetDb } from '@/mocks'
+
+beforeEach(() => resetDb())
+
+it('loads the first page', async () => {
+  const { wrapper } = createHookWrapper('/products')
+  const { result } = renderHook(() => useProductsQuery(), { wrapper })
+
+  await waitFor(() => expect(result.current.products).toBeDefined())
+  expect(result.current.products?.data).toHaveLength(10)
+})
+```
+
+Cover the error path too — swap `API.defaults.adapter` for one that throws (see
+`queries.test.tsx`), or `throw new MockHttpError(500)` from the handler.
+
+```bash
+npm run test           # once
+npm run test:watch     # while developing
+npm run test:coverage  # v8 coverage report
+```
 
 ## Switching from mock to a real backend
 
@@ -332,22 +452,31 @@ API hooks. Just:
 4. Once every endpoint is live, delete `src/mocks/` and the mock wiring in
    `src/lib/api/axios.ts`.
 
-Auth: the `requestInterceptor` attaches `Bearer <accessToken>` from the store;
-the `errorInterceptor` clears the session on `401`. Add token-refresh logic in
-`src/lib/api/interceptors/error.ts` when your backend supports it.
+Auth: the `requestInterceptor` attaches `Bearer <accessToken>` from the store.
+The `errorInterceptor` already implements silent refresh — on a `401` it calls
+`URLS.auth.refresh` once, replays the original request, and shares that single
+refresh across every request that failed at the same time. If your backend
+rotates refresh tokens it will pick the new one up automatically; if the refresh
+fails, the session is cleared and the user lands on sign-in. Point
+`URLS.auth.refresh` at your endpoint and adjust the response shape in
+`requestNewAccessToken` if it differs.
 
 ## Common tasks — where to look
 
-| I want to…                       | File / API                                              |
-| -------------------------------- | ------------------------------------------------------- |
-| Show a toast                     | `import { toast } from '@/_shared'` → `toast.success()` |
-| Validate a form                  | zod schema + `zodResolver` (see any `*.schema.ts`)      |
-| Read/Write URL query params      | `useSetParams()` from `@/hooks`                         |
-| Debounce an input                | `useDebounce()` from `@/hooks`                          |
-| Global state                     | `useAuthStore` / `useSidebarStore` from `@/store`       |
-| Protect / gate a route           | `<ProtectedRoute>` / `<PublicRoute>` in `src/router`    |
-| Merge Tailwind classes safely    | `cn()` from `@/utils`                                   |
-| Add an env variable              | declare it in `src/vite-env.d.ts`, read `import.meta.env` |
+| I want to…                    | File / API                                                       |
+| ----------------------------- | ---------------------------------------------------------------- |
+| Show a toast                  | `import { toast } from '@/_shared'` → `toast.success()`          |
+| Validate a form               | zod schema + `zodResolver` (see any `*.schema.ts`)               |
+| Read/Write URL query params   | `useSetParams()` from `@/hooks`                                  |
+| Debounce an input             | `useDebounce()` from `@/hooks`                                   |
+| Global state                  | `useAuthStore` / `useSidebarStore` from `@/store`                |
+| Protect / gate a route        | `<ProtectedRoute>` / `<PublicRoute>` in `src/router`             |
+| Merge Tailwind classes safely | `cn()` from `@/utils`                                            |
+| Add an env variable           | declare it in `src/vite-env.d.ts`, read `import.meta.env`        |
+| Read or toggle the theme      | `useTheme()` from `@/hooks`                                      |
+| Catch a render crash          | `<ErrorBoundary>` from `@/_shared`, `errorElement` in the router |
+| Make a mock endpoint fail     | `throw new MockHttpError(500)` in a handler                      |
+| Render a table's 4 states     | `<Table isLoading isError onRetry emptyText emptyHint>`          |
 
 ## Troubleshooting
 
@@ -356,6 +485,11 @@ the `errorInterceptor` clears the session on `401`. Add token-refresh logic in
   or reference it only inside JSX (render time), not at module top-level.
 - **`No mock handler for … `** (in the console) — you called an endpoint with
   no matching handler; add one in `src/mocks/handlers.ts` or check the path.
-- **Tailwind class does nothing** — it must be a real token (`bg-primary-10`,
-  not `bg-brandblue`) and the file must be under `src/**` so Tailwind's
-  `content` glob sees it.
+- **Tailwind class does nothing** — it must be a real token (`bg-surface`,
+  `bg-primary-10`, not `bg-brandblue`) and the file must be under `src/**` so
+  Tailwind's `content` glob sees it.
+- **`no-restricted-imports` error** — you crossed a layer boundary. Either move
+  the code to the right layer or pass the value in as a prop; edit
+  `eslint.config.mjs` only if the architecture itself is changing.
+- **A color looks wrong in dark mode** — you used a ramp shade
+  (`text-dark-30`) where a semantic token belongs (`text-content-muted`).

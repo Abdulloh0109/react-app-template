@@ -1,9 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import {
-  loginSchema,
-  type LoginFormValues,
-} from './Authorization.schema'
+import { loginSchema, type LoginFormValues } from './Authorization.schema'
 import { authorizationTokens as tokens } from './Authorization.tokens'
 import { toast } from '@/_shared'
 import { useAuth } from '@/services'
@@ -66,7 +63,11 @@ export const Authorization = ({ onForgotPasswordClick }: Props) => {
             Forgot password?
           </button>
         )}
-        <Button type="submit" isLoading={isLoggingIn} classNames={{ base: 'w-full' }}>
+        <Button
+          type="submit"
+          isLoading={isLoggingIn}
+          classNames={{ base: 'w-full' }}
+        >
           Sign in
         </Button>
       </form>

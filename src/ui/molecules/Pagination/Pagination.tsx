@@ -31,8 +31,10 @@ export const Pagination = ({
   if (totalPages <= 1) return null
 
   const pages = buildPages(currentPage, totalPages)
+  // AntD pagination items are 32px squares; the current page is outlined in
+  // primary rather than filled.
   const baseBtn =
-    'flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm transition-colors'
+    'flex h-control min-w-control items-center justify-center rounded border px-2 text-sm transition-colors'
 
   return (
     <nav className={cn('flex items-center gap-2', className)}>
@@ -42,14 +44,14 @@ export const Pagination = ({
         onClick={() => onPageChange(currentPage - 1)}
         className={cn(
           baseBtn,
-          'border-gray-30 text-dark-40 hover:border-primary-10 disabled:opacity-40 disabled:hover:border-gray-30'
+          'border-line-strong bg-surface text-content-muted hover:border-accent hover:text-accent-text disabled:bg-surface-muted disabled:text-content-subtle disabled:hover:border-line-strong disabled:hover:text-content-subtle'
         )}
       >
         Prev
       </button>
       {pages.map((page, idx) =>
         page === '...' ? (
-          <span key={`gap-${idx}`} className="px-1 text-gray-10">
+          <span key={`gap-${idx}`} className="px-1 text-content-subtle">
             …
           </span>
         ) : (
@@ -60,8 +62,8 @@ export const Pagination = ({
             className={cn(
               baseBtn,
               page === currentPage
-                ? 'border-primary-10 bg-primary-10 text-white'
-                : 'border-gray-30 text-dark-40 hover:border-primary-10'
+                ? 'border-accent bg-surface font-medium text-accent-text'
+                : 'border-line-strong bg-surface text-content-muted hover:border-accent hover:text-accent-text'
             )}
           >
             {page}
@@ -74,7 +76,7 @@ export const Pagination = ({
         onClick={() => onPageChange(currentPage + 1)}
         className={cn(
           baseBtn,
-          'border-gray-30 text-dark-40 hover:border-primary-10 disabled:opacity-40 disabled:hover:border-gray-30'
+          'border-line-strong bg-surface text-content-muted hover:border-accent hover:text-accent-text disabled:bg-surface-muted disabled:text-content-subtle disabled:hover:border-line-strong disabled:hover:text-content-subtle'
         )}
       >
         Next

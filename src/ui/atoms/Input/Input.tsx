@@ -11,7 +11,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={cn(tokens.wrapper, classNames?.wrapper)}>
         {label && (
-          <label htmlFor={inputId} className={cn(tokens.label, classNames?.label)}>
+          <label
+            htmlFor={inputId}
+            className={cn(tokens.label, classNames?.label)}
+          >
             {label}
           </label>
         )}

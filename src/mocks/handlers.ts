@@ -1,4 +1,5 @@
 import { db, nextId, type MockUser } from './db'
+import { MockHttpError } from '@/lib/api/mock/errors'
 import type { MockHandler } from '@/lib/api/mock'
 import type { ResponseDataWithPagination } from '@/lib/api'
 
@@ -51,6 +52,24 @@ export const mockHandlers: MockHandler[] = [
     method: 'post',
     pattern: /^\/auth\/logout$/,
     resolve: () => ({ ok: true, message: 'Logged out' }),
+  },
+  {
+    // Exercised by the silent-refresh interceptor. Rejects with a 401 when no
+    // refresh token is presented, which is what pushes the user to sign-in.
+    method: 'post',
+    pattern: /^\/auth\/refresh$/,
+    resolve: ({ body }) => {
+      const { refresh_token } = (body ?? {}) as { refresh_token?: string }
+      if (!refresh_token) {
+        throw new MockHttpError(401, 'Invalid refresh token')
+      }
+      return {
+        access_token: `mock-access-token-${Date.now()}`,
+        refresh_token: 'mock-refresh-token',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      }
+    },
   },
 
   /* --------------------------------- users --------------------------------- */

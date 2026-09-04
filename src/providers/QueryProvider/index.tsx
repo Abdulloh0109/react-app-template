@@ -1,5 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import * as React from 'react'
+import { client } from './queryClient'
 import type { QueryProviderProps } from './types'
 
 const Devtools = import.meta.env.DEV
@@ -9,18 +10,6 @@ const Devtools = import.meta.env.DEV
       }))
     )
   : null
-
-export const client = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      staleTime: 30 * 1000,
-      gcTime: 5 * 60 * 1000,
-    },
-  },
-})
 
 export const QueryProvider = ({ children }: QueryProviderProps) => {
   return (

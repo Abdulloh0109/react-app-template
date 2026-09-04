@@ -2,18 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --radius: 0.5rem;
-}
+/*
+ * Color variables are NOT declared here — `tailwind.config.ts` injects them on
+ * `:root` and `.dark` from `src/tokens/semantic.ts`, so the palette has exactly
+ * one source of truth. Only non-color, non-tokenizable base styles live here.
+ *
+ * Radii, shadows and control heights follow Ant Design v5 and live in
+ * `tailwind.config.ts`.
+ */
 
 html {
   scroll-behavior: smooth;
 }
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 0.875rem;
-  color: #4a4a4a;
+@layer base {
+  body {
+    /* Ant Design's own font stack — a large part of the "AntD feel". */
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+      Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    font-size: 14px;
+    line-height: 1.5714285714285714;
+    -webkit-font-smoothing: antialiased;
+    @apply bg-canvas text-content-muted;
+  }
+
+  /*
+   * AntD suppresses the native outline and shows a soft halo instead, which is
+   * too faint on its own to satisfy WCAG 2.4.7. This keeps the AntD look for
+   * controls that draw their own halo (inputs, buttons) and gives everything
+   * else a crisp, visible ring.
+   */
+  :focus-visible {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Remove number input spinners */
@@ -28,19 +62,22 @@ input[type='number'] {
   -moz-appearance: textfield;
 }
 
-/* Thin scrollbars */
+/* Thin scrollbars, themed */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 6px;
-  background-color: #fff;
+  width: 8px;
+  height: 8px;
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #d6dce0;
-  border-radius: 10px;
+  background-color: rgb(var(--color-line-strong));
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #fff;
-  border-radius: 10px;
+  background-color: transparent;
+}
+
+* {
+  scrollbar-color: rgb(var(--color-line-strong)) transparent;
 }

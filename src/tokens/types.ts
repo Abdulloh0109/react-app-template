@@ -40,3 +40,62 @@ export type ColorShades = {
   50?: string
   default?: string
 }
+
+export type ThemeName = 'light' | 'dark'
+
+/** Theme preference as stored/exposed to users — `system` follows the OS. */
+export type ThemePreference = ThemeName | 'system'
+
+/**
+ * Every semantic color role, with one hex value per theme. Adding a key here
+ * makes `bg-<key>` / `text-<key>` / `border-<key>` available in Tailwind and
+ * forces both themes to define it.
+ */
+export type SemanticPalette = {
+  'canvas': string
+  'surface': string
+  'surface-muted': string
+  'surface-raised': string
+  'line': string
+  'line-strong': string
+  'overlay': string
+
+  'content': string
+  'content-muted': string
+  'content-subtle': string
+  'content-inverted': string
+
+  'accent': string
+  'accent-hover': string
+  'accent-active': string
+  'accent-contrast': string
+  /** The accent as text/icon on a surface — not always equal to `accent`. */
+  'accent-text': string
+  'accent-subtle': string
+
+  'destructive': string
+  'destructive-hover': string
+  'destructive-active': string
+  'destructive-contrast': string
+
+  'nav': string
+  'nav-content': string
+  'nav-active': string
+  'nav-active-content': string
+
+  'tone-success': string
+  'tone-success-border': string
+  'tone-success-content': string
+  'tone-warning': string
+  'tone-warning-border': string
+  'tone-warning-content': string
+  'tone-danger': string
+  'tone-danger-border': string
+  'tone-danger-content': string
+  'tone-info': string
+  'tone-info-border': string
+  'tone-info-content': string
+  'tone-neutral': string
+  'tone-neutral-border': string
+  'tone-neutral-content': string
+}

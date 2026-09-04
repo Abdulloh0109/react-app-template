@@ -11,8 +11,8 @@ export const UsersPage = () => {
     <PagesLayout
       title={
         <div className="flex items-center gap-3">
-          <UsersIcon className="size-7 text-primary-10" />
-          <h1 className="text-2xl font-bold text-dark-20">Users</h1>
+          <UsersIcon className="size-7 text-accent-text" aria-hidden />
+          <h1 className="text-2xl font-semibold text-content">Users</h1>
         </div>
       }
       actions={
@@ -23,7 +23,11 @@ export const UsersPage = () => {
       content={<UserTable />}
       modal={
         openAdd && (
-          <UserModal mode="add" open={openAdd} onClose={() => setOpenAdd(false)} />
+          <UserModal
+            mode="add"
+            open={openAdd}
+            onClose={() => setOpenAdd(false)}
+          />
         )
       }
     />

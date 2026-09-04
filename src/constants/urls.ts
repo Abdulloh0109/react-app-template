@@ -7,6 +7,7 @@ export const URLS = {
   auth: {
     login: '/auth/login',
     logout: '/auth/logout',
+    refresh: '/auth/refresh',
   },
   users: {
     get: '/users',

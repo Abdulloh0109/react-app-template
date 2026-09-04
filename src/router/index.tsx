@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicRoute } from './PublicRoute'
 import { ROUTES } from '@/constants'
-import { AuthPage, NotFoundPage } from '@/pages'
+import { AuthPage, NotFoundPage, RouteErrorPage } from '@/pages'
 import { MainLayout } from '@/templates'
 import { Spinner } from '@/ui'
 
@@ -19,7 +19,7 @@ const suspense = (node: ReactNode) => (
   <Suspense
     fallback={
       <div className="flex h-full w-full items-center justify-center py-20">
-        <Spinner className="size-8 text-primary-10" />
+        <Spinner className="size-8 text-accent-text" />
       </div>
     }
   >
@@ -35,6 +35,7 @@ const router = createBrowserRouter([
         <AuthPage />
       </PublicRoute>
     ),
+    errorElement: <RouteErrorPage />,
   },
   {
     path: ROUTES.HOME,
@@ -43,6 +44,9 @@ const router = createBrowserRouter([
         <MainLayout />
       </ProtectedRoute>
     ),
+    // Covers the layout and every child route, including a lazy chunk that
+    // fails to load after a redeploy.
+    errorElement: <RouteErrorPage />,
     children: [
       { index: true, element: suspense(<HomePage />) },
       { path: 'users', element: suspense(<UsersPage />) },

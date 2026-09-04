@@ -4,6 +4,7 @@ import type {
   InternalAxiosRequestConfig,
 } from 'axios'
 import { AxiosError } from 'axios'
+import { MockHttpError } from './errors'
 import { mockHandlers } from '@/mocks'
 
 export type MockContext = {
@@ -21,7 +22,11 @@ export type MockHandler = {
   resolve: (ctx: MockContext) => unknown | Promise<unknown>
 }
 
-const NETWORK_DELAY_MS = 350
+/**
+ * Simulated latency, so loading states are visible while developing. Set
+ * `VITE_MOCK_DELAY=0` to remove it (the test setup does exactly that).
+ */
+const NETWORK_DELAY_MS = Number(import.meta.env.VITE_MOCK_DELAY ?? 350)
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -40,13 +45,29 @@ const parseBody = (data: unknown): unknown => {
   }
 }
 
+const toAxiosError = (
+  message: string,
+  code: string,
+  config: InternalAxiosRequestConfig,
+  status: number,
+  statusText: string,
+  detail: string
+) =>
+  new AxiosError(message, code, config, null, {
+    data: { detail },
+    status,
+    statusText,
+    headers: {},
+    config,
+  } as AxiosResponse)
+
 /**
  * A drop-in axios adapter that serves requests from `src/mocks/handlers`.
  * Wired up in `axios.ts` only when `VITE_USE_MOCK === 'true'`, so production
  * code keeps using the real network adapter untouched.
  */
 export const mockAdapter: AxiosAdapter = async (config) => {
-  await delay(NETWORK_DELAY_MS)
+  if (NETWORK_DELAY_MS > 0) await delay(NETWORK_DELAY_MS)
 
   const method = (config.method ?? 'get').toLowerCase()
   const path = (config.url ?? '').split('?')[0]
@@ -58,28 +79,37 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     const match = path.match(handler.pattern)
     if (!match) continue
 
-    const data = await handler.resolve({ params, body, match, config })
+    try {
+      const data = await handler.resolve({ params, body, match, config })
 
-    return {
-      data,
-      status: 200,
-      statusText: 'OK',
-      headers: {},
-      config,
-    } as AxiosResponse
+      return {
+        data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      } as AxiosResponse
+    } catch (error) {
+      if (error instanceof MockHttpError) {
+        throw toAxiosError(
+          error.message,
+          'ERR_BAD_RESPONSE',
+          config,
+          error.status,
+          error.message,
+          error.detail
+        )
+      }
+      throw error
+    }
   }
 
-  throw new AxiosError(
+  throw toAxiosError(
     `No mock handler for ${method.toUpperCase()} ${path}`,
     'ERR_MOCK_NOT_FOUND',
     config,
-    null,
-    {
-      data: { detail: 'Not found' },
-      status: 404,
-      statusText: 'Not Found',
-      headers: {},
-      config,
-    } as AxiosResponse
+    404,
+    'Not Found',
+    'Not found'
   )
 }

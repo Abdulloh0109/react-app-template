@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { userTableColumns } from './UserTable.data'
 import { userTableTokens as tokens } from './UserTable.tokens'
 import { toast } from '@/_shared'
 import { useDebounce, useSetParams } from '@/hooks'
 import { UserModal } from '@/organisms'
-import { useUsers } from '@/services'
+import { useDeleteUser, useUsersQuery } from '@/services'
 import type { ActionsType } from '@/types'
 import { Button, Modal, Pagination, SearchInput, Table, Text } from '@/ui'
 
 export const UserTable = () => {
-  const { getParam, setParam } = useSetParams()
-  const { users, isLoadingUsers, deleteUser } = useUsers()
+  const { getParam, setParam, setParams } = useSetParams()
+  const { users, isLoadingUsers, isUsersError, refetchUsers } = useUsersQuery()
+  const { deleteUser, isDeleting } = useDeleteUser()
 
   const [searchValue, setSearchValue] = useState(() => getParam('search'))
   const debouncedSearch = useDebounce(searchValue)
@@ -18,18 +19,18 @@ export const UserTable = () => {
   const [editId, setEditId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
+  // A new search always resets to page 1 — otherwise page 4 of the old result
+  // set shows an empty table for the new one.
   useEffect(() => {
-    setParam('search', debouncedSearch)
-    setParam('page', '')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch])
+    setParams({ search: debouncedSearch, page: '' })
+  }, [debouncedSearch, setParams])
 
-  const handleAction = (id: string, action: ActionsType) => {
+  const handleAction = useCallback((id: string, action: ActionsType) => {
     if (action === 'edit') setEditId(id)
     if (action === 'delete') setDeleteId(id)
-  }
+  }, [])
 
-  const columns = useMemo(() => userTableColumns(handleAction), [])
+  const columns = useMemo(() => userTableColumns(handleAction), [handleAction])
 
   const onConfirmDelete = () => {
     if (!deleteId) return
@@ -45,6 +46,7 @@ export const UserTable = () => {
   const pagination = users?.pagination
   const currentPage = pagination?.current_page ?? 1
   const totalPages = pagination?.total_pages ?? 1
+  const hasSearch = debouncedSearch.length > 0
 
   return (
     <div className={tokens.wrapper}>
@@ -53,20 +55,30 @@ export const UserTable = () => {
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder="Search by name or email"
+          aria-label="Search users by name or email"
         />
       </div>
 
       <div className={tokens.tableArea}>
         <Table
+          caption="Users"
           columns={columns}
           data={users?.data ?? []}
           isLoading={isLoadingUsers}
-          emptyText="No users found"
+          isError={isUsersError}
+          errorText="Could not load users."
+          onRetry={() => refetchUsers()}
+          emptyText={hasSearch ? 'No users match your search' : 'No users yet'}
+          emptyHint={
+            hasSearch
+              ? 'Try a different name or email.'
+              : 'Use “Add user” to create the first one.'
+          }
         />
       </div>
 
       <div className={tokens.footer}>
-        <Text className={tokens.total}>
+        <Text className={tokens.total} aria-live="polite">
           {pagination?.total_items ?? 0} total
         </Text>
         <Pagination
@@ -95,7 +107,8 @@ export const UserTable = () => {
               Cancel
             </Button>
             <Button
-              classNames={{ base: 'bg-danger-10 hover:bg-danger-20' }}
+              variant="danger"
+              isLoading={isDeleting}
               onClick={onConfirmDelete}
             >
               Delete

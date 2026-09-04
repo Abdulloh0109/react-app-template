@@ -8,7 +8,7 @@ export const Text = ({
   ...props
 }: TextProps) => {
   return (
-    <Component className={cn('text-sm text-dark-30', className)} {...props}>
+    <Component className={cn('text-sm text-content', className)} {...props}>
       {children}
     </Component>
   )

@@ -18,18 +18,19 @@ export const Sidebar = ({
   return (
     <aside
       className={cn(
-        'flex h-screen flex-col bg-sidebar-50 py-6 text-sidebar-10 transition-[width] duration-200',
-        isExpanded ? 'w-60' : 'w-[76px]'
+        // AntD Layout.Sider: 200px expanded, 80px collapsed.
+        'flex h-screen flex-col bg-nav py-4 text-nav-content transition-[width] duration-200',
+        isExpanded ? 'w-[200px]' : 'w-20'
       )}
     >
-      <div className="flex items-center gap-3 px-5">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-10 font-semibold text-white">
+      <div className="flex h-8 items-center gap-3 px-6">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded bg-accent text-sm font-semibold text-accent-contrast">
           {brand.charAt(0)}
         </div>
-        {isExpanded && <span className="text-base font-semibold">{brand}</span>}
+        {isExpanded && <span className="text-base font-medium">{brand}</span>}
       </div>
 
-      <nav className="mt-8 flex flex-1 flex-col gap-1 px-3">
+      <nav aria-label="Main" className="mt-6 flex flex-1 flex-col gap-1 px-2">
         {navList.map(({ label, href, icon: Icon }) => (
           <NavLink
             key={href}
@@ -37,10 +38,11 @@ export const Sidebar = ({
             end={href === '/'}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
+                // AntD menu item: 40px tall, 6px radius, primary fill when selected.
+                'flex h-10 items-center gap-3 rounded px-4 text-sm transition-colors',
                 isActive
-                  ? 'bg-sidebar-40 text-sidebar-20'
-                  : 'text-sidebar-10/80 hover:bg-sidebar-40/60'
+                  ? 'bg-nav-active text-nav-active-content'
+                  : 'text-nav-content/65 hover:bg-white/10 hover:text-nav-content'
               )
             }
           >
@@ -53,7 +55,8 @@ export const Sidebar = ({
       <button
         type="button"
         onClick={onCollapse}
-        className="mx-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-10/70 transition-colors hover:bg-sidebar-40/60"
+        aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+        className="mx-2 flex h-10 items-center gap-3 rounded px-4 text-sm text-nav-content/65 transition-colors hover:bg-white/10 hover:text-nav-content"
       >
         <span className="flex size-5 items-center justify-center">
           {isExpanded ? '«' : '»'}
