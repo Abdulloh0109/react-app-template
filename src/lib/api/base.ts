@@ -5,10 +5,15 @@ import {
 } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { API } from './axios'
-import type { EditData, EnabledQuery } from './types'
+import type {
+  DetailQueryKey,
+  EditData,
+  EnabledQuery,
+  ListQueryKey,
+} from './types'
 
 export const useGet = <T>(
-  key: [string] | [string, string | Record<string, string>],
+  key: ListQueryKey,
   url: string,
   options?: EnabledQuery
 ): UseQueryResult<T> => {
@@ -25,7 +30,7 @@ export const useGet = <T>(
 }
 
 export const useGetOne = <T>(
-  key: [string, string],
+  key: DetailQueryKey,
   url: string,
   enabled?: boolean
 ): UseQueryResult<T> => {

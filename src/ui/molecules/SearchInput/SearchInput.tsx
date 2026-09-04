@@ -12,14 +12,14 @@ export type SearchInputProps = InputHTMLAttributes<HTMLInputElement> & {
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
   ({ classNames, placeholder = 'Search...', ...props }, ref) => {
     return (
-      <div className={cn('relative w-full max-w-xs', classNames?.wrapper)}>
-        <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-gray-10" />
+      <div className={cn('relative w-full max-w-[264px]', classNames?.wrapper)}>
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-content-subtle" />
         <input
           ref={ref}
           type="search"
           placeholder={placeholder}
           className={cn(
-            'w-full rounded-[10px] border border-transparent bg-gray-40 py-2.5 pl-10 pr-4 text-sm text-dark-30 outline-none transition-colors placeholder:text-gray-10 focus:border-primary-10 focus:bg-white',
+            'h-control w-full rounded border border-line-strong bg-surface pl-9 pr-3 text-sm text-content outline-none transition-colors placeholder:text-content-subtle hover:border-accent focus:border-accent focus:shadow-focus focus-visible:outline-none',
             classNames?.field
           )}
           {...props}

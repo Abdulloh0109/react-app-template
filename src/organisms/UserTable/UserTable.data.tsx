@@ -3,7 +3,11 @@ import { DeleteIcon, EditIcon } from '@/assets/icons'
 import type { UserResponseDto, UserStatus } from '@/services'
 import type { ActionsType, StatusVariant } from '@/types'
 import { Status, Text } from '@/ui'
-import { formatDate } from '@/utils'
+import { cn, formatDate } from '@/utils'
+
+/** 40px min hit area — comfortably tappable without breaking the row height. */
+const actionButton =
+  'flex size-8 items-center justify-center rounded text-content-subtle transition-colors hover:bg-surface-muted hover:text-accent-text'
 
 const STATUS_VARIANT: Record<UserStatus, StatusVariant> = {
   active: 'success',
@@ -18,9 +22,7 @@ export const userTableColumns = (
     accessorKey: 'full_name',
     header: 'Name',
     cell: ({ row }) => (
-      <Text className="font-semibold text-dark-20">
-        {row.original.full_name}
-      </Text>
+      <Text className="text-content">{row.original.full_name}</Text>
     ),
   },
   {
@@ -56,19 +58,22 @@ export const userTableColumns = (
       <div className="flex items-center justify-end gap-3">
         <button
           type="button"
-          aria-label="Edit"
+          aria-label={`Edit ${row.original.full_name}`}
           onClick={() => onAction(row.original.id, 'edit')}
-          className="rounded-md p-1.5 text-dark-50 transition-colors hover:bg-gray-40 hover:text-primary-10"
+          className={actionButton}
         >
-          <EditIcon className="size-5" />
+          <EditIcon className="size-5" aria-hidden />
         </button>
         <button
           type="button"
-          aria-label="Delete"
+          aria-label={`Delete ${row.original.full_name}`}
           onClick={() => onAction(row.original.id, 'delete')}
-          className="rounded-md p-1.5 text-dark-50 transition-colors hover:bg-gray-40 hover:text-danger-10"
+          className={cn(
+            actionButton,
+            'hover:text-tone-danger-content hover:bg-tone-danger'
+          )}
         >
-          <DeleteIcon className="size-5" />
+          <DeleteIcon className="size-5" aria-hidden />
         </button>
       </div>
     ),

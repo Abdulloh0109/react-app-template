@@ -20,14 +20,12 @@ export const LabelWithValue = ({
     <Text
       as="span"
       className={cn(
-        'flex items-center gap-2.5 text-sm font-medium text-dark-40/[.5]',
+        'flex items-center gap-2 text-sm text-content-muted',
         classNames?.label
       )}
     >
       {label}
-      <span
-        className={cn('text-sm font-semibold text-dark-30', classNames?.value)}
-      >
+      <span className={cn('text-sm text-content', classNames?.value)}>
         {value}
       </span>
     </Text>

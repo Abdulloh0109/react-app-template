@@ -15,6 +15,8 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: refresh,
           isAuthenticated: true,
         }),
+      setAccessToken: (access) =>
+        set({ accessToken: access, isAuthenticated: true }),
       setUser: (user) => set({ user }),
       clearTokens: () =>
         set({

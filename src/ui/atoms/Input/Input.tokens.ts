@@ -1,12 +1,18 @@
+/**
+ * Ant Design v5 input: white field, 1px #d9d9d9 border, 32px tall, and AntD
+ * focus treatment — the border turns primary and a soft 2px halo appears.
+ */
 export const inputTokens = {
-  wrapper: 'flex flex-col gap-1.5 w-full',
-  label: 'text-sm font-medium text-dark-40/[.7]',
+  wrapper: 'flex flex-col gap-2 w-full',
+  label: 'text-sm text-content',
   field: {
-    base: 'w-full rounded-[10px] border bg-gray-40 px-4 py-2.5 text-sm text-dark-30 outline-none transition-colors placeholder:text-gray-10',
+    base: 'h-control w-full rounded border bg-surface px-3 text-sm text-content outline-none transition-colors placeholder:text-content-subtle',
     default:
-      'border-transparent focus:border-primary-10 focus:bg-white',
-    error: 'border-danger-10 bg-danger-50/[.3] focus:border-danger-10',
-    disabled: 'disabled:cursor-not-allowed disabled:opacity-60',
+      'border-line-strong hover:border-accent focus:border-accent focus:shadow-focus focus-visible:outline-none',
+    error:
+      'border-destructive hover:border-destructive-hover focus:border-destructive focus:shadow-none focus-visible:outline-none',
+    disabled:
+      'disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-content-subtle disabled:hover:border-line-strong',
   },
-  error: 'text-xs text-danger-10',
+  error: 'text-xs text-tone-danger-content',
 }

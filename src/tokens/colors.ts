@@ -1,73 +1,87 @@
 import type { ColorShades } from './types'
 
 /**
- * Brand color scale. Each token is a 10–50 shade ramp so utilities like
- * `bg-primary-10`, `text-dark-30` or `fill-danger-10` resolve in Tailwind.
- * Adjust these for a new project — every component reads from here.
+ * Brand color ramps, taken from Ant Design v5's palettes.
+ *
+ * These are the *fixed* hues — they mean the same thing in light and dark. For
+ * anything structural (page, card, text, border) reach for the semantic tokens
+ * in `semantic.ts` instead, which is what makes dark mode work without a single
+ * `dark:` class.
+ *
+ * Each token is a 10–50 ramp so utilities like `bg-primary-10` or `text-dark-30`
+ * resolve in Tailwind. Adjust these for a new brand — everything follows.
  */
 export const colorTokens: Record<string, ColorShades> = {
+  /* AntD neutral text scale (gray-10 → gray-7) */
   dark: {
-    10: '#242424',
-    20: '#323234',
-    30: '#424242',
-    40: '#4A4A4A',
-    50: '#747474',
+    10: '#1F1F1F',
+    20: '#262626',
+    30: '#434343',
+    40: '#595959',
+    50: '#8C8C8C',
   },
+  /* AntD neutral surface scale (gray-6 → gray-2) */
   gray: {
-    10: '#B6B7BA',
-    20: '#B5B5B5',
-    30: '#D1D1D1',
-    40: '#F2F2F2',
-    50: '#F3F6F8',
+    10: '#BFBFBF',
+    20: '#D9D9D9',
+    30: '#F0F0F0',
+    40: '#F5F5F5',
+    50: '#FAFAFA',
   },
+  /* AntD blue: 6 / 5 / 7 / 3 / 1 */
   primary: {
-    10: '#2F6BFF',
-    20: '#225AE0',
-    30: '#1B49BD',
-    40: '#C9D8FF',
-    50: '#EEF3FF',
+    10: '#1677FF',
+    20: '#4096FF',
+    30: '#0958D9',
+    40: '#91CAFF',
+    50: '#E6F4FF',
   },
   secondary: {
-    10: '#606061',
-    20: '#D9D9DF',
-    30: '#E3E3E8',
-    40: '#EFEFF3',
-    50: '#F7F7FA',
+    10: '#595959',
+    20: '#D9D9D9',
+    30: '#F0F0F0',
+    40: '#F5F5F5',
+    50: '#FAFAFA',
   },
+  /* AntD green: 6 / 5 / 3 / 8 / 1 */
   success: {
-    10: '#2EBF42',
-    20: '#76BF97',
-    30: '#CCFBE0',
-    40: '#16A52A',
-    50: '#F0F9E3',
+    10: '#52C41A',
+    20: '#73D13D',
+    30: '#B7EB8F',
+    40: '#237804',
+    50: '#F6FFED',
   },
+  /* AntD red: 5 / 6 / 7 / 3 / 1 */
   danger: {
-    10: '#F42929',
-    20: '#EB2428',
-    30: '#D61B1E',
-    40: '#E69494',
-    50: '#FFCCCE',
+    10: '#FF4D4F',
+    20: '#F5222D',
+    30: '#CF1322',
+    40: '#FFA39E',
+    50: '#FFF1F0',
   },
+  /* AntD blue tints */
   info: {
-    10: '#1B9BE4',
-    20: '#DFF8FF',
-    30: '#D9EDFF',
-    40: '#B8DBF6',
-    50: '#99C5EC',
+    10: '#1677FF',
+    20: '#E6F4FF',
+    30: '#BAE0FF',
+    40: '#91CAFF',
+    50: '#69B1FF',
   },
+  /* AntD Tag fills */
   status: {
-    10: '#CCF8E0',
-    20: '#E8EAEE',
-    30: '#FFF2CE',
-    40: '#FFDDCC',
-    50: '#FFC2C2',
-    default: '#EFE5FF',
+    10: '#F6FFED',
+    20: '#FAFAFA',
+    30: '#FFFBE6',
+    40: '#FFF7E6',
+    50: '#FFF1F0',
+    default: '#F9F0FF',
   },
+  /* AntD dark Sider */
   sidebar: {
     10: '#FFFFFF',
-    20: '#2F6BFF',
-    30: '#585858',
-    40: '#434343',
-    50: '#1F2937',
+    20: '#1677FF',
+    30: '#8C8C8C',
+    40: '#002140',
+    50: '#001529',
   },
 }

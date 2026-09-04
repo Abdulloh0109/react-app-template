@@ -1,3 +1,13 @@
+/**
+ * Query keys are `readonly` so feature services can build them with `as const`
+ * (see `usersKeys` in `src/services/users`) without a cast at every call site.
+ */
+export type ListQueryKey =
+  | readonly [string]
+  | readonly [string, string | Record<string, string>]
+
+export type DetailQueryKey = readonly [string, string]
+
 export type EditData<T> = {
   url: string
   item: T

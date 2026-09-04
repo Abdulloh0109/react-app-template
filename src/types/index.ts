@@ -11,7 +11,12 @@ export type SelectOption = {
   value: string
 }
 
-export type StatusVariant = 'success' | 'danger' | 'warning' | 'info' | 'default'
+export type StatusVariant =
+  | 'success'
+  | 'danger'
+  | 'warning'
+  | 'info'
+  | 'default'
 
 /** Row-level actions surfaced by table organisms. */
 export type ActionsType = 'view' | 'edit' | 'delete'
@@ -36,9 +41,4 @@ export type NavItem = {
   label: string
   href: string
   icon: FunctionComponent<SVGProps<SVGSVGElement>>
-}
-
-export enum KeyLocalStorage {
-  ACCESS_TOKEN = 'access',
-  REFRESH_TOKEN = 'refresh',
 }

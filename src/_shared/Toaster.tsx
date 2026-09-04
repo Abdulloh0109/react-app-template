@@ -1,4 +1,4 @@
-import { Toaster as SonnerToaster, toast } from 'sonner'
+import { Toaster as SonnerToaster } from 'sonner'
 
 /**
  * App-wide toast outlet. Mounted once in `App.tsx`. Trigger toasts anywhere
@@ -11,11 +11,10 @@ export const Toaster = () => {
       duration={4000}
       toastOptions={{
         classNames: {
-          toast: 'rounded-xl border border-gray-40 text-sm',
+          toast:
+            'rounded-lg border border-line bg-surface text-content text-sm shadow-modal',
         },
       }}
     />
   )
 }
-
-export { toast }
